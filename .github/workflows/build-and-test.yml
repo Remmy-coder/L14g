@@ -56,8 +56,8 @@ jobs:
        run: bun install
 
      - name: Run Rust tests
-        working-directory: ./src-tauri
-        run: cargo test ${{ matrix.args }}
+       working-directory: ./src-tauri
+       run: cargo test ${{ matrix.args }}
 
      - name: Clean up .env file
        run: rm src-tauri/.env
