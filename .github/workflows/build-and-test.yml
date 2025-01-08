@@ -37,33 +37,25 @@ jobs:
          sudo apt-get update
          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-     - name: Install SQLite (Windows only)
+     - name: Install vcpkg (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
-         choco install sqlite
+        git clone https://github.com/microsoft/vcpkg.git
+        .\vcpkg\bootstrap-vcpkg.bat
 
-     - name: Download SQLite Precompiled Binaries (Windows only)
+     - name: Install SQLite via vcpkg (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
-         Invoke-WebRequest -Uri "https://www.sqlite.org/2023/sqlite-dll-win64-x64-3420000.zip" -OutFile "sqlite.zip"
-         Expand-Archive -Path "sqlite.zip" -DestinationPath "sqlite"
+        .\vcpkg\vcpkg install sqlite3:x64-windows
 
-     - name: Generate sqlite3.lib (Windows only)
+     - name: Configure vcpkg Paths (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
-         lib /def:sqlite\sqlite3.def /out:sqlite\sqlite3.lib /machine:x64
-
-     - name: Configure SQLite Paths (Windows only)
-       if: matrix.platform == 'windows-latest'
-       run: |
-         $env:LIB="$env:LIB;$env:GITHUB_WORKSPACE\sqlite"
-         $env:INCLUDE="$env:INCLUDE;$env:GITHUB_WORKSPACE\sqlite"
-
-     - name: Verify SQLite Installation (Windows only)
-       if: matrix.platform == 'windows-latest'
-       run: |
-         dir $env:GITHUB_WORKSPACE\sqlite
-
+        $env:VCPKG_ROOT="$env:GITHUB_WORKSPACE\vcpkg"
+        $env:Path="$env:VCPKG_ROOT;$env:Path"
+        $env:LIB="$env:LIB;$env:VCPKG_ROOT\installed\x64-windows\lib"
+        $env:INCLUDE="$env:INCLUDE;$env:VCPKG_ROOT\installed\x64-windows\include"
+     
      - name: Setup Bun
        uses: oven-sh/setup-bun@v1
        with:
