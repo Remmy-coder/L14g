@@ -52,6 +52,14 @@ jobs:
        run: |
          choco install visualstudio2022buildtools --params "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 
+     - name: Generate sqlite3.def (Windows only)
+       if: matrix.platform == 'windows-latest'
+       shell: cmd
+       run: |
+         cd C:\ProgramData\chocolatey\lib\SQLite\tools
+         if not exist sqlite3.def (
+           dlltool -z sqlite3.def -D sqlite3.dll
+
      - name: Generate sqlite3.lib (Windows only)
        if: matrix.platform == 'windows-latest'
        shell: cmd
