@@ -55,6 +55,12 @@ jobs:
      - name: install frontend dependencies
        run: bun install
 
+     - name: Add SQLite to Rust build path (Windows only)
+       if: matrix.platform == 'windows-latest'
+       run: |
+         set LIB=%CD%\sqlite
+         set PATH=%PATH%;%CD%\sqlite
+
      - name: Run Rust tests
        working-directory: ./src-tauri
        run: cargo test ${{ matrix.args }}
