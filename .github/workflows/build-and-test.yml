@@ -48,6 +48,11 @@ jobs:
          Invoke-WebRequest -Uri "https://www.sqlite.org/2023/sqlite-dll-win64-x64-3420000.zip" -OutFile "sqlite.zip"
          Expand-Archive -Path "sqlite.zip" -DestinationPath "sqlite"
 
+     - name: Generate sqlite3.lib (Windows only)
+       if: matrix.platform == 'windows-latest'
+       run: |
+         lib /def:sqlite\sqlite3.def /out:sqlite\sqlite3.lib /machine:x64
+
      - name: Configure SQLite Paths (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
