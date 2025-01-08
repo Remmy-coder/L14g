@@ -42,6 +42,17 @@ jobs:
        run: |
          choco install sqlite
 
+     - name: Configure SQLite Paths
+       if: matrix.platform == 'windows-latest'
+       run: |
+         $env:LIB="$env:LIB;C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools"
+         $env:INCLUDE="$env:INCLUDE;C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools"
+
+     - name: Verify SQLite Installation
+       if: matrix.platform == 'windows-latest'
+       run: |
+         dir C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools
+
      - name: Setup Bun
        uses: oven-sh/setup-bun@v1
        with:
@@ -59,17 +70,6 @@ jobs:
 
      - name: install frontend dependencies
        run: bun install
-
-     - name: Add SQLite to build paths (Windows only)
-       if: matrix.platform == 'windows-latest'
-       run: |
-         $env:LIB="$env:LIB;C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools"
-         $env:INCLUDE="$env:INCLUDE;C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools"
-
-     - name: Debug SQLite paths (Windows only)
-       if: matrix.platform == 'windows-latest'
-       run: |
-         dir C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools
 
      - name: Run Rust tests
        working-directory: ./src-tauri
