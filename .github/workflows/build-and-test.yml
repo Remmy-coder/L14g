@@ -42,11 +42,13 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: |
           choco install sqlite --force
+          refreshenv
 
       - name: Verify SQLite Installation (Windows only)
         if: matrix.platform == 'windows-latest'
         run: |
           dir "C:\ProgramData\chocolatey\lib\SQLite\tools"
+          "C:\ProgramData\chocolatey\lib\SQLite\tools\sqlite3.exe" --version
 
       - name: Install Visual Studio Build Tools (Windows only)
         if: matrix.platform == 'windows-latest'
@@ -61,6 +63,7 @@ jobs:
           if not exist sqlite3.def (
             dlltool -z sqlite3.def -D sqlite3.dll
           )
+          type sqlite3.def
 
       - name: Generate sqlite3.lib (Windows only)
         if: matrix.platform == 'windows-latest'
@@ -69,12 +72,15 @@ jobs:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
           lib /machine:x64 /def:sqlite3.def /out:sqlite3.lib
+          dir sqlite3.lib
 
-      - name: Set SQLITE3_LIB_DIR (Windows only)
+      - name: Set SQLite environment variables (Windows only)
         if: matrix.platform == 'windows-latest'
         shell: bash
         run: |
           echo "SQLITE3_LIB_DIR=C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_ENV
+          echo "SQLITE3_INCLUDE_DIR=C:\ProgramData\chocolatey\lib\SQLite\tools" >> $GITHUB_ENV
+          echo "LIBSQLITE3_LINK_LIB=C:\ProgramData\chocolatey\lib\SQLite\tools\sqlite3.lib" >> $GITHUB_ENV
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -94,9 +100,19 @@ jobs:
       - name: install frontend dependencies
         run: bun install
 
-      - name: Run Rust tests
+      - name: Run Rust tests with debug output
         working-directory: ./src-tauri
-        run: cargo test ${{ matrix.args }}
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            echo "SQLite Environment Variables:"
+            echo "SQLITE3_LIB_DIR: $SQLITE3_LIB_DIR"
+            echo "SQLITE3_INCLUDE_DIR: $SQLITE3_INCLUDE_DIR"
+            echo "LIBSQLITE3_LINK_LIB: $LIBSQLITE3_LINK_LIB"
+            dir "C:\ProgramData\chocolatey\lib\SQLite\tools"
+          fi
+          cargo test ${{ matrix.args }} --lib --nocapture
 
       - name: Clean up .env file
         run: rm src-tauri/.env
