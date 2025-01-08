@@ -33,3 +33,4 @@ rand = "0.8"
 tempfile = "3.3"
 diesel_migrations = "2.0"
 jsonwebtoken = "8.1"
+libsqlite3-sys = { version = "*", features = ["bundled"] }

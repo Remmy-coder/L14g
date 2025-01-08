@@ -30,6 +30,12 @@ jobs:
         run: |
           echo "TEST_SECRET=NotPresent" > src-tauri/.env
 
+      - name: Install SQLite (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          vcpkg integrate install
+          vcpkg install sqlite3:x64-windows-static
+
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -57,3 +63,6 @@ jobs:
       - name: Run Rust tests
         working-directory: ./src-tauri
         run: cargo test ${{ matrix.args }}
+
+      - name: Clean up .env file
+        run: rm src-tauri/.env
