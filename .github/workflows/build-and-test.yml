@@ -42,16 +42,22 @@ jobs:
        run: |
          choco install sqlite
 
-     - name: Configure SQLite Paths
+     - name: Download SQLite Precompiled Binaries (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
-         $env:LIB="$env:LIB;C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools"
-         $env:INCLUDE="$env:INCLUDE;C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools"
+         Invoke-WebRequest -Uri "https://www.sqlite.org/2023/sqlite-dll-win64-x64-3420000.zip" -OutFile "sqlite.zip"
+         Expand-Archive -Path "sqlite.zip" -DestinationPath "sqlite"
 
-     - name: Verify SQLite Installation
+     - name: Configure SQLite Paths (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
-         dir C:\\ProgramData\\chocolatey\\lib\\sqlite\\tools
+         $env:LIB="$env:LIB;$env:GITHUB_WORKSPACE\sqlite"
+         $env:INCLUDE="$env:INCLUDE;$env:GITHUB_WORKSPACE\sqlite"
+
+     - name: Verify SQLite Installation (Windows only)
+       if: matrix.platform == 'windows-latest'
+       run: |
+         dir $env:GITHUB_WORKSPACE\sqlite
 
      - name: Setup Bun
        uses: oven-sh/setup-bun@v1
