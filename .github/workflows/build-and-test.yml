@@ -37,6 +37,11 @@ jobs:
          sudo apt-get update
          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+     - name: Install SQLite (Windows only)
+       if: matrix.platform == 'windows-latest'
+       run: |
+         choco install sqlite
+
      - name: Setup Bun
        uses: oven-sh/setup-bun@v1
        with:
@@ -58,8 +63,8 @@ jobs:
      - name: Add SQLite to Rust build path (Windows only)
        if: matrix.platform == 'windows-latest'
        run: |
-         set LIB=%CD%\sqlite
-         set PATH=%PATH%;%CD%\sqlite
+         $env:LIB="$env:LIB;$PWD\\sqlite"
+         $env:PATH="$env:PATH;$PWD\\sqlite"
 
      - name: Run Rust tests
        working-directory: ./src-tauri
