@@ -1,5 +1,4 @@
-name: 'Cargo build and test'
-
+name: 'Cargo build & test'
 on:
   workflow_dispatch:
   push:
@@ -23,62 +22,19 @@ jobs:
             args: ''
           - platform: 'windows-latest'
             args: ''
-
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create .env file securely
+      - name: Create .env file
         run: |
-          echo "TEST_SECRET=${{ secrets.TEST_SECRET }}" > src-tauri/.env
+          echo "TEST_SECRET=NotPresent" > src-tauri/.env
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
-      - name: Install Visual Studio Build Tools (Windows only)
-        if: matrix.platform == 'windows-latest'
-        run: |
-          choco install visualstudio2022buildtools --params "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
-
-      - name: Download and Setup SQLite (Windows only)
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          $sqliteVersion = "3450000"
-          $downloadUrl = "https://sqlite.org/2024/sqlite-dll-win64-x64-$sqliteVersion.zip"
-          
-          # Create SQLite directory
-          New-Item -ItemType Directory -Force -Path "C:\sqlite"
-          
-          # Download and extract SQLite
-          Invoke-WebRequest -Uri $downloadUrl -OutFile "C:\sqlite\sqlite.zip"
-          Expand-Archive -Path "C:\sqlite\sqlite.zip" -DestinationPath "C:\sqlite" -Force
-          
-          # Add to PATH
-          echo "C:\sqlite" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          
-          # Set environment variables
-          echo "SQLITE3_LIB_DIR=C:\sqlite" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "SQLITE3_INCLUDE_DIR=C:\sqlite" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: Generate SQLite lib (Windows only)
-        if: matrix.platform == 'windows-latest'
-        shell: cmd
-        working-directory: C:\sqlite
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-          lib /machine:x64 /def:sqlite3.def /out:sqlite3.lib
-
-      - name: Verify SQLite Setup (Windows only)
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          Get-ChildItem "C:\sqlite"
-          echo "SQLITE3_LIB_DIR: $env:SQLITE3_LIB_DIR"
-          echo "SQLITE3_INCLUDE_DIR: $env:SQLITE3_INCLUDE_DIR"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -100,9 +56,4 @@ jobs:
 
       - name: Run Rust tests
         working-directory: ./src-tauri
-        env:
-          RUST_BACKTRACE: 1
-        run: cargo test ${{ matrix.args }} --lib --nocapture
-
-      - name: Clean up .env file
-        run: rm src-tauri/.env
+        run: cargo test ${{ matrix.args }}
